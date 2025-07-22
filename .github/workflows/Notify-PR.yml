@@ -5,21 +5,16 @@ on:
     types: [opened, reopened, closed]
 
 jobs:
-  slackNotification:
+  Notification-Slack:
     runs-on: ubuntu-latest
 
     steps:
       - name: Send notification to Slack
         uses: slackapi/slack-github-action@v2.1.1
         with:
-          webhook-type: incoming-webhhok
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-                {
-                  "text": "
-                  📢 *Pull Request* was ${{ github.event.action }} by *${{ github.actor }}*:\n
-                  >${{ github.event.pull_request.title }}\n
-                  🔗 ${{ github.event.pull_request.html_url }}
-                  "
-                }
-        env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+            {
+              "text": "📢 *Pull Request* was ${{ github.event.action }} by *${{ github.actor }}*:\n>${{ github.event.pull_request.title }}\n🔗 ${{ github.event.pull_request.html_url }}"
+            }
