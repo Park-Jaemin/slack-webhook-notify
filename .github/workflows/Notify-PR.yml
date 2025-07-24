@@ -96,7 +96,7 @@ jobs:
           
               # 메시지 타임스탬프 추출
               ORIGINAL_TS=$(echo $SEARCH_RESPONSE | jq -r '.messages.matches[] | select(.text | contains("PR #'${PR_NUMBER}'")) | .ts' | head -n 1)
-              echo ORIGINAL_TS
+              echo $ORIGINAL_TS
 
               if [ -n "$ORIGINAL_TS" ]; then
                 # 쓰레드 메시지 작성
