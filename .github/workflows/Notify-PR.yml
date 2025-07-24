@@ -26,6 +26,10 @@ jobs:
 
           REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers) }}' | jq -r '.[].login')
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_AUTHOR_SLACK_ID="${user_map[$PR_AUTHOR]}"
+          if [ -z "$PR_AUTHOR_SLACK_ID" ]; then
+            PR_AUTHOR_SLACK_ID=$PR_AUTHOR
+          fi
           SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
           TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
           
@@ -43,14 +47,12 @@ jobs:
                 fi
               done
     
-              TEXT="🔔 *PR 리뷰 요청*
-              리뷰어: $MENTIONS
-              *PR 정보*
-              ━━━━━━━━━━━━━━━
-              📌 *제목:* ${{ github.event.pull_request.title }}
-              👤 *작성자:* $PR_AUTHOR
-              🌿 *브랜치:* \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
-              🔗 *PR 링크:* ${{ github.event.pull_request.html_url }}
+              TEXT="📢 *PR #$PR_NUMBER 리뷰 요청*
+              $MENTIONS
+              *작성자 : * <@$PR_AUTHOR_SLACK_ID>
+              *브랜치 : * \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
+              ${{ github.event.pull_request.title }}
+              ${{ github.event.pull_request.html_url }}
               ━━━━━━━━━━━━━━━\n
               "
 
