@@ -22,7 +22,7 @@ jobs:
         run: |
           # GitHub 리뷰어 이름 → 슬랙 사용자 ID 수동 매핑
           declare -A user_map
-          user_map["Park-Jae-Min"]="U096UP6APFF"
+          user_map["Park-Jaemin"]="U096UP6APFF"
 
           REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers) }}' | jq -r '.[].login')
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
@@ -49,7 +49,7 @@ jobs:
     
               TEXT="📢 *PR #$PR_NUMBER 리뷰 요청*
               $MENTIONS
-              *작성자 : * "<@$PR_AUTHOR_SLACK_ID>"
+              *작성자 : * <@$PR_AUTHOR_SLACK_ID>
               *브랜치 : * \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
               ${{ github.event.pull_request.title }}
               ${{ github.event.pull_request.html_url }}
