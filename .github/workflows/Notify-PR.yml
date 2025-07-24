@@ -19,7 +19,6 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-          TS_REDIS: ${{ secrets.TS_REDIS }}
         run: |
           # GitHub 리뷰어 이름 → 슬랙 사용자 ID 수동 매핑
           declare -A user_map
