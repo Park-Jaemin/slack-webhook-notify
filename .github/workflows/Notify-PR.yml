@@ -59,7 +59,7 @@ jobs:
                 -H 'Content-type: application/json' \
                 --data "{
                   \"channel\": \"$SLACK_CHANNEL_ID\",
-                  \"text\": \"$TEXT\"
+                  \"text\": \"$TEXT\",
                   \"blocks\": [
                     {
                       \"type\": \"section\",
