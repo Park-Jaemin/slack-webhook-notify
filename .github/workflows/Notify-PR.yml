@@ -43,15 +43,15 @@ jobs:
                 fi
               done
     
-              TEXT="🔔 *PR 리뷰 요청*\n
-                    리뷰어: $MENTIONS\n
-                    *PR 정보*
-                    ━━━━━━━━━━━━━━━
-                    📌 *제목:* ${{ github.event.pull_request.title }}
-                    👤 *작성자:* $PR_AUTHOR
-                    🌿 *브랜치:* \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
-                    🔗 *PR 링크:* ${{ github.event.pull_request.html_url }}\n
-                    ━━━━━━━━━━━━━━━\n
+              TEXT="🔔 *PR 리뷰 요청*
+              리뷰어: $MENTIONS
+              *PR 정보*
+              ━━━━━━━━━━━━━━━
+              📌 *제목:* ${{ github.event.pull_request.title }}
+              👤 *작성자:* $PR_AUTHOR
+              🌿 *브랜치:* \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
+              🔗 *PR 링크:* ${{ github.event.pull_request.html_url }}
+              ━━━━━━━━━━━━━━━\n
               "
 
               curl -X POST https://slack.com/api/chat.postMessage \
@@ -96,6 +96,7 @@ jobs:
           
               # 메시지 타임스탬프 추출
               ORIGINAL_TS=$(echo $SEARCH_RESPONSE | jq -r '.messages.matches[] | select(.text | contains("PR #'${PR_NUMBER}'")) | .ts' | head -n 1)
+              echo ORIGINAL_TS
 
               if [ -n "$ORIGINAL_TS" ]; then
                 # 쓰레드 메시지 작성
