@@ -1,20 +1,39 @@
-name: Notify Slack on PR
+name: Notify Slack on PR with Bot
 
 on:
   pull_request:
-    types: [ opened, reopened, closed ]
+    types: [opened, reopened, review_requested]
 
 jobs:
-  Notification-Slack:
+  Notify-Slack:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send notification to Slack
-        uses: slackapi/slack-github-action@v2.1.1
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": "📢 *Pull Request* was ${{ github.event.action }} by *${{ github.actor }}*:\n>${{ github.event.pull_request.title }}\n🔗 ${{ github.event.pull_request.html_url }}"
-            }
+      - name: Send Slack Message with Mention
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        run: |
+          # GitHub 리뷰어 이름 → 슬랙 사용자 ID 수동 매핑
+          declare -A user_map
+          user_map["Park-Jae-Min"]="U096UP6APFF"
+
+          REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers) }}' | jq -r '.[].login')
+          
+          MENTIONS=""
+          for reviewer in $REVIEWERS; do
+            SLACK_ID="${user_map[$reviewer]}"
+            if [ -n "$SLACK_ID" ]; then
+              MENTIONS+="<@$SLACK_ID> "
+            fi
+          done
+
+          TEXT="📣 $MENTIONS 리뷰가 요청되었습니다!\nPR 제목: *${{ github.event.pull_request.title }}*\n🔗 ${{ github.event.pull_request.html_url }}"
+
+          curl -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H 'Content-type: application/json' \
+            --data "{
+              \"channel\": \"$SLACK_CHANNEL_ID\",
+              \"text\": \"$TEXT\"
+            }"
