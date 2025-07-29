@@ -18,6 +18,7 @@ jobs:
       - name: Send Slack Message with Mention
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_USER_TOKEN: ${{ secrets.SLACK_USER_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_CHANNEL_BOT_ID: ${{ secrets.SLACK_CHANNEL_BOT_ID }}
         run: |
@@ -96,7 +97,7 @@ jobs:
               # Slack 채널 히스토리에서 원본 PR 메시지 검색
               SEARCH_RESPONSE=$(curl -s -X GET \
                 "https://slack.com/api/search.messages?query=PR+%23'${PR_NUMBER}'+from%3A%3C'${SLACK_CHANNEL_BOT_ID}'%3E&sort=timestamp&sort_dir=desc" \
-                -H "Authorization: Bearer $SLACK_BOT_TOKEN")
+                -H "Authorization: Bearer $SLACK_USER_TOKEN")
           
               # 메시지 타임스탬프 추출
               ORIGINAL_TS=$(echo $SEARCH_RESPONSE | jq -r '.messages.matches[] | select(.text | contains("PR #'${PR_NUMBER}'")) | .ts' | head -n 1)
