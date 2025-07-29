@@ -92,6 +92,7 @@ jobs:
                 AUTHOR_SLACK_ID=$COMMENT_AUTHOR
               fi
 
+              echo "https://slack.com/api/search.messages?query=PR+%23'${PR_NUMBER}'+from%3A%3C'${SLACK_CHANNEL_BOT_ID}'%3E&sort=timestamp&sort_dir=desc"
               # Slack 채널 히스토리에서 원본 PR 메시지 검색
               SEARCH_RESPONSE=$(curl -s -X GET \
                 "https://slack.com/api/search.messages?query=PR+%23'${PR_NUMBER}'+from%3A%3C'${SLACK_CHANNEL_BOT_ID}'%3E&sort=timestamp&sort_dir=desc" \
