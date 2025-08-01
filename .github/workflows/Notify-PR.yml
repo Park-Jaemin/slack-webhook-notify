@@ -27,54 +27,84 @@ jobs:
           user_map["Park-Jaemin"]="U096UP6APFF"
 
           REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers) }}' | jq -r '.[].login')
+          
+          
+          PR_NUMBER="${{ github.event.pull_request.number }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          ACTION="${{ github.event.action }}"
+          
           PR_AUTHOR_SLACK_ID="${user_map[$PR_AUTHOR]}"
           if [ -z "$PR_AUTHOR_SLACK_ID" ]; then
             PR_AUTHOR_SLACK_ID=$PR_AUTHOR
           fi
-          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
-          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
           
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
           
           
           case "${{ github.event_name }}" in
             "pull_request")
-              MENTIONS=""
-              for reviewer in $REVIEWERS; do
-                SLACK_ID="${user_map[$reviewer]}"
-                if [ -n "$SLACK_ID" ]; then
-                  MENTIONS+="<@$SLACK_ID> "
-                fi
-              done
-    
-              TEXT="📢 *PR #$PR_NUMBER 리뷰 요청*
-              $MENTIONS
-              *작성자 : * <@$PR_AUTHOR_SLACK_ID>
-              *브랜치 : * \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
-              ${{ github.event.pull_request.title }}
-              ${{ github.event.pull_request.html_url }}
-              ━━━━━━━━━━━━━━━\n
-              "
+              if [[ "$ACTION" == "synchronize" ]]; then
+                # synchronize 이벤트의 경우 기존 PR 메시지 찾기
+                SEARCH_RESPONSE=$(curl -s -X GET \
+                  "https://slack.com/api/search.messages?query=PR+%23${PR_NUMBER}+from%3A%3C%40${SLACK_CHANNEL_BOT_ID}%3E&sort=timestamp&sort_dir=desc" \
+                  -H "Authorization: Bearer $SLACK_USER_TOKEN")
 
-              curl -X POST https://slack.com/api/chat.postMessage \
-                -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-                -H 'Content-type: application/json' \
-                --data "{
-                  \"channel\": \"$SLACK_CHANNEL_ID\",
-                  \"text\": \"$TEXT\",
-                  \"blocks\": [
-                    {
-                      \"type\": \"section\",
-                      \"text\": {
-                        \"type\": \"mrkdwn\",
-                        \"text\": \"$TEXT\"
+                ORIGINAL_TS=$(echo $SEARCH_RESPONSE | tr -d '\000-\037' | jq -r '.messages.matches[] | select(any(.blocks[];.text.text | contains("PR #'${PR_NUMBER}'"))) | .ts' | head -n 1)
+
+                if [ -n "$ORIGINAL_TS" ]; then
+                  # 새로운 커밋 정보 가져오기
+                  COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+                  COMMIT_URL="$PR_URL/commits/$COMMIT_SHA"
+          
+                  UPDATE_TEXT="🔄 *PR 업데이트*\n👤 작성자: <@$AUTHOR_SLACK_ID>\n━━━━━━━━━━\n<$COMMIT_URL|새로운 커밋 보기>"
+
+                  curl -X POST https://slack.com/api/chat.postMessage \
+                    -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                    -H 'Content-type: application/json' \
+                    --data "{
+                      \"channel\": \"$SLACK_CHANNEL_ID\",
+                      \"thread_ts\": \"$ORIGINAL_TS\",
+                      \"text\": \"$UPDATE_TEXT\"
+                    }"
+                fi
+              else
+                MENTIONS=""
+                for reviewer in $REVIEWERS; do
+                  SLACK_ID="${user_map[$reviewer]}"
+                  if [ -n "$SLACK_ID" ]; then
+                    MENTIONS+="<@$SLACK_ID> "
+                  fi
+                done
+      
+                TEXT="📢 *PR #$PR_NUMBER 리뷰 요청*
+                $MENTIONS
+                *작성자 : * <@$PR_AUTHOR_SLACK_ID>
+                *브랜치 : * \`$SOURCE_BRANCH\` → \`$TARGET_BRANCH\`
+                ${{ github.event.pull_request.title }}
+                ${{ github.event.pull_request.html_url }}
+                ━━━━━━━━━━━━━━━\n
+                "
+  
+                curl -X POST https://slack.com/api/chat.postMessage \
+                  -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                  -H 'Content-type: application/json' \
+                  --data "{
+                    \"channel\": \"$SLACK_CHANNEL_ID\",
+                    \"text\": \"$TEXT\",
+                    \"blocks\": [
+                      {
+                        \"type\": \"section\",
+                        \"text\": {
+                          \"type\": \"mrkdwn\",
+                          \"text\": \"$TEXT\"
+                        }
                       }
-                    }
-                  ]
-                }"
-              ;;
+                    ]
+                  }"
+                ;;
             
             "issue_comment"|"pull_request_review_comment"|"pull_request_review")
               # 코멘트 작성자 정보
