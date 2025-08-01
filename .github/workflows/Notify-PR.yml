@@ -87,6 +87,11 @@ jobs:
                 COMMENT_TEXT="${{ github.event.comment.body }}"
                 COMMENT_TYPE="코멘트"
               fi
+          
+              if [ -z "$COMMENT_TEXT" ]; then
+                echo "Skipping notification"
+                exit 0
+              fi
 
               AUTHOR_SLACK_ID="${user_map[$COMMENT_AUTHOR]}"
               if [ -z "$AUTHOR_SLACK_ID" ]; then
