@@ -95,7 +95,7 @@ jobs:
 
               # Slack 채널 히스토리에서 원본 PR 메시지 검색
               SEARCH_RESPONSE=$(curl -s -X GET \
-                "https://slack.com/api/search.messages?query=PR+%23${PR_NUMBER}+from%3A%3C$%40{SLACK_CHANNEL_BOT_ID}%3E&sort=timestamp&sort_dir=desc" \
+                "https://slack.com/api/search.messages?query=PR+%23${PR_NUMBER}+from%3A%3C$%40${SLACK_CHANNEL_BOT_ID}%3E&sort=timestamp&sort_dir=desc" \
                 -H "Authorization: Bearer $SLACK_USER_TOKEN")
           
               # 메시지 타임스탬프 추출
