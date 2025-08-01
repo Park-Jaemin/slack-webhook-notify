@@ -27,8 +27,6 @@ jobs:
           user_map["Park-Jaemin"]="U096UP6APFF"
 
           REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers) }}' | jq -r '.[].login')
-          
-          
           PR_NUMBER="${{ github.event.pull_request.number }}"
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
@@ -41,8 +39,6 @@ jobs:
           if [ -z "$PR_AUTHOR_SLACK_ID" ]; then
             PR_AUTHOR_SLACK_ID=$PR_AUTHOR
           fi
-          
-          
           
           case "${{ github.event_name }}" in
             "pull_request")
@@ -59,7 +55,7 @@ jobs:
                   COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
                   COMMIT_URL="$PR_URL/commits/$COMMIT_SHA"
           
-                  UPDATE_TEXT="🔄 *PR 업데이트*\n👤 작성자: <@$AUTHOR_SLACK_ID>\n━━━━━━━━━━\n<$COMMIT_URL|새로운 커밋 보기>"
+                  UPDATE_TEXT="🔄 *PR 업데이트*\n👤 작성자: <@$PR_AUTHOR_SLACK_ID>\n━━━━━━━━━━\n<$COMMIT_URL|새로운 커밋 보기>"
 
                   curl -X POST https://slack.com/api/chat.postMessage \
                     -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
@@ -124,11 +120,6 @@ jobs:
                 exit 0
               fi
 
-              AUTHOR_SLACK_ID="${user_map[$COMMENT_AUTHOR]}"
-              if [ -z "$AUTHOR_SLACK_ID" ]; then
-                AUTHOR_SLACK_ID=$COMMENT_AUTHOR
-              fi
-
               # Slack 채널 히스토리에서 원본 PR 메시지 검색
               SEARCH_RESPONSE=$(curl -s -X GET \
                 "https://slack.com/api/search.messages?query=PR+%23${PR_NUMBER}+from%3A%3C%40${SLACK_CHANNEL_BOT_ID}%3E&sort=timestamp&sort_dir=desc" \
@@ -140,7 +131,7 @@ jobs:
 
               if [ -n "$ORIGINAL_TS" ]; then
                 # 쓰레드 메시지 작성
-                THREAD_TEXT="💬 *새로운 ${COMMENT_TYPE}*\n👤 작성자: <@$AUTHOR_SLACK_ID>\n━━━━━━━━━━\n$COMMENT_TEXT"
+                THREAD_TEXT="💬 *새로운 ${COMMENT_TYPE}*\n👤 작성자: <@$PR_AUTHOR_SLACK_ID>\n━━━━━━━━━━\n$COMMENT_TEXT"
 
                 curl -X POST https://slack.com/api/chat.postMessage \
                   -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
